@@ -4,7 +4,9 @@
     {
         static void Main()
         {
-            Console.WriteLine("Garage App");
+            GarageHandler handler = new GarageHandler();
+            ConsoleUI ui = new ConsoleUI(handler);
+            ui.Run();
         }
     }
 }

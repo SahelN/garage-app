@@ -58,8 +58,8 @@ namespace GarageApp.Tests
             garage.Park(new Car("ABC123", "Black", 4, FuelType.Gasoline));
             garage.Park(new Motorcycle("MCP001", "Pink", 2, 600));
             garage.Park(new Bus("BUS100", "Yellow", 6, 50));
-            garage.Park(new Boat("BOAT01", "White", 8.5));
-            garage.Park(new Airplane("SEABC1", "White", 3, 2));
+            garage.Park(new Boat("BOA001", "White", 8.5));
+            garage.Park(new Airplane("PLN123", "White", 3, 2));
 
             // Assert
             Assert.Equal(5, garage.ParkedCount);
@@ -192,7 +192,7 @@ namespace GarageApp.Tests
             Garage<Vehicle> garage = CreateGarage(5);
             garage.Park(new Car("ABC123", "Black", 4, FuelType.Gasoline));
             garage.Park(new Bus("BUS100", "Yellow", 6, 50));
-            garage.Park(new Boat("BOAT01", "White", 8.5));
+            garage.Park(new Boat("BOA001", "White", 8.5));
 
             // Act
             int visited = 0;

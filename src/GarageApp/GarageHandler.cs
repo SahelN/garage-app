@@ -50,8 +50,8 @@ namespace GarageApp
                 new Car("DEF456", "Red", 4, FuelType.Electric),
                 new Motorcycle("MCP001", "Pink", 3, 600),
                 new Bus("BUS100", "Yellow", 6, 50),
-                new Boat("BOAT01", "White", 8.5),
-                new Airplane("SEABC1", "White", 3, 2)
+                new Boat("BOA001", "White", 8.5),
+                new Airplane("PLN123", "White", 3, 2)
             };
 
             int parkedCount = 0;
