@@ -1,4 +1,5 @@
 ﻿using GarageApp.Vehicles;
+using Microsoft.VisualBasic.FileIO;
 
 namespace GarageApp
 {
@@ -92,7 +93,15 @@ namespace GarageApp
         }
 
         // null means "ignore this property".
-        public List<Vehicle> Search(string? vehicleType, string? color, int? numberOfWheels)
+        public List<Vehicle> Search(
+            string? vehicleType = null,
+            string? color = null,
+            int? numberOfWheels = null,
+            FuelType? fuelType = null,
+            int? numberOfSeats = null,
+            int? cylinderVolume = null,
+            int? numberOfEngines = null,
+            double? length = null)
         {
             IEnumerable<Vehicle> result = RequireGarage();
 
@@ -112,6 +121,37 @@ namespace GarageApp
             {
                 int wheels = numberOfWheels.Value;
                 result = result.Where(v => v.NumberOfWheels == wheels);
+            }
+
+            if (fuelType.HasValue)
+            {
+                FuelType fuel = fuelType.Value;
+                result = result.Where(v => v is Car car && car.FuelType == fuel);
+            }
+
+            if (numberOfSeats.HasValue)
+            {
+                int seats = numberOfSeats.Value;
+                result = result.Where(v => v is Bus bus && bus.NumberOfSeats == seats);
+            }
+
+            if (cylinderVolume.HasValue)
+            {
+                int volume = cylinderVolume.Value;
+                result = result.Where(v => v is Motorcycle motorcycle && motorcycle.CylinderVolume == volume);
+            }
+
+            if (numberOfEngines.HasValue)
+            {
+                int engines = numberOfEngines.Value;
+                result = result.Where(v => v is Airplane airplane && airplane.NumberOfEngines == engines);
+            }
+
+            // double: compare with a small tolerance, never with == (8.5 can be stored as 8.4999999...)
+            if (length.HasValue)
+            {
+                double boatLength = length.Value;
+                result = result.Where(v => v is Boat boat && Math.Abs(boat.Length - boatLength) < 0.01);
             }
 
             return result.ToList();
