@@ -13,6 +13,21 @@ namespace GarageApp
 
         public int Capacity { get; }
 
+        public int ParkedCount
+        {
+            get { return _vehicles.Count; }
+        }
+
+        public bool IsFull
+        {
+            get { return ParkedCount >= Capacity; }
+        }
+
+        public int FreeSpaces
+        {
+            get { return Capacity - ParkedCount; }
+        }
+
         public Garage(int capacity)
         {
             if (capacity < 1)
