@@ -10,7 +10,13 @@ namespace GarageApp.Interfaces
         int FreeSpaces { get; }
         bool IsFull { get; }
 
-        void CreateGarage(int capacity);
+        string CurrentGarageName { get; }
+
+        bool GarageNameExists(string name);
+        void CreateGarage(string name, int capacity);
+        bool SelectGarage(string name);
+        List<GarageSummary> GetGarageSummaries();
+        string? FindGarageNameFor(string registrationNumber);
         int SeedVehicles();
 
         ParkResult Park(Vehicle vehicle);
