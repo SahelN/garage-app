@@ -8,6 +8,7 @@ namespace GarageApp.Vehicles
         public string RegistrationNumber { get; }
         public string Color { get; }
         public int NumberOfWheels { get; }
+        public abstract int SpaceInThirds { get; }
 
         // Swedish format: 3 letters, 2 digits, then a letter or a digit (ABC123, ABC12E).
         // ^ and $ make sure the WHOLE text matches, not just a part of it.
@@ -42,7 +43,7 @@ namespace GarageApp.Vehicles
 
         public override string ToString()
         {
-            return $"{GetType().Name,-11} {RegistrationNumber,-8} Color: {Color,-8} Wheels: {NumberOfWheels}";
+            return $"{GetType().Name,-11} {RegistrationNumber,-8} Color: {Color,-8} Wheels: {NumberOfWheels,-3} Size: {VehicleSize.FormatAsSpaces(SpaceInThirds),-6}";
         }
     }
 }

@@ -34,9 +34,20 @@ namespace GarageApp
             get { return RequireGarage().ParkedCount; }
         }
 
-        public int FreeSpaces
+        public double FreeSpaces
         {
             get { return RequireGarage().FreeSpaces; }
+        }
+
+        public double UsedSpaces
+        {
+            get { return RequireGarage().UsedSpaces; }
+        }
+
+        // Does a vehicle of this type fit in the current garage?
+        public bool HasRoomFor(string vehicleType)
+        {
+            return RequireGarage().HasRoomFor(VehicleSize.GetSpaceInThirds(vehicleType));
         }
 
         public bool IsFull
@@ -101,8 +112,6 @@ namespace GarageApp
             return garage?.Name;
         }
 
-        // ---------- Populate ----------
-
         // Adds some ready-made vehicles to the current garage.
         // Returns how many were actually parked.
         public int SeedVehicles()
@@ -126,8 +135,6 @@ namespace GarageApp
             return parkedCount;
         }
 
-        // ---------- Park, remove, find (current garage) ----------
-
         public ParkResult Park(Vehicle vehicle)
         {
             ArgumentNullException.ThrowIfNull(vehicle);
@@ -149,8 +156,6 @@ namespace GarageApp
         {
             return RequireGarage().FindByRegistrationNumber(registrationNumber);
         }
-
-        // ---------- Lists and search (current garage, LINQ) ----------
 
         // Returns a copy, so the UI cannot get hold of the garage itself
         public List<Vehicle> GetAllVehicles()

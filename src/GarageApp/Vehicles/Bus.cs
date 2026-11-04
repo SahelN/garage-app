@@ -6,6 +6,11 @@ namespace GarageApp.Vehicles
     {
         public int NumberOfSeats { get; }
 
+        public override int SpaceInThirds
+        {
+            get { return VehicleSize.Bus; }
+        }
+
         public Bus(string registrationNumber, string color, int numberOfWheels, int numberOfSeats)
             : base(registrationNumber, color, numberOfWheels)
         {

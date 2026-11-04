@@ -5,5 +5,6 @@
         string RegistrationNumber { get; }
         string Color { get; }
         int NumberOfWheels { get; }
+        int SpaceInThirds { get; }
     }
 }

@@ -4,6 +4,7 @@
     {
         Success,
         GarageFull,
-        DuplicateRegistrationNumber
+        DuplicateRegistrationNumber,
+        NotEnoughSpace
     }
 }

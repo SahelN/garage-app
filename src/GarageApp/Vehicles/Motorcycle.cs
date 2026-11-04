@@ -6,6 +6,11 @@ namespace GarageApp.Vehicles
     {
         public int CylinderVolume { get; }
 
+        public override int SpaceInThirds
+        {
+            get { return VehicleSize.Motorcycle; }
+        }
+
         public Motorcycle(string registrationNumber, string color, int numberOfWheels, int cylinderVolume)
             : base(registrationNumber, color, numberOfWheels)
         {

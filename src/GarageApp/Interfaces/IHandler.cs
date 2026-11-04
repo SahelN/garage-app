@@ -7,7 +7,9 @@ namespace GarageApp.Interfaces
         bool HasGarage { get; }
         int Capacity { get; }
         int ParkedCount { get; }
-        int FreeSpaces { get; }
+        double FreeSpaces { get; }
+        double UsedSpaces { get; }
+        bool HasRoomFor(string vehicleType);
         bool IsFull { get; }
 
         string CurrentGarageName { get; }

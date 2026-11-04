@@ -52,7 +52,8 @@ namespace GarageApp.Tests
         public void Park_DifferentVehicleTypes_AllAreParked()
         {
             // Arrange: Garage<Vehicle> accepts every subclass of Vehicle
-            Garage<Vehicle> garage = CreateGarage(5);
+            // Arrange: car 1 + motorcycle 1/3 + bus 2 + boat 2 + airplane 3 = 8 1/3 spaces
+            Garage<Vehicle> garage = CreateGarage(9);
 
             // Act
             garage.Park(new Car("ABC123", "Black", 4, FuelType.Gasoline));
@@ -63,7 +64,8 @@ namespace GarageApp.Tests
 
             // Assert
             Assert.Equal(5, garage.ParkedCount);
-            Assert.True(garage.IsFull);
+            Assert.Equal(2, garage.FreeThirds);
+            Assert.False(garage.IsFull);
         }
 
         [Fact]
@@ -230,11 +232,104 @@ namespace GarageApp.Tests
             garage.Park(new Car("DEF456", "Red", 4, FuelType.Diesel));
 
             // Act
-            int freeSpaces = garage.FreeSpaces;
+            double freeSpaces = garage.FreeSpaces;
 
             // Assert
             Assert.Equal(3, freeSpaces);
             Assert.False(garage.IsFull);
+        }
+
+        [Fact]
+        public void Park_ThreeMotorcyclesInGarageOfOne_AllAreParkedAndGarageIsFull()
+        {
+            // Arrange
+            Garage<Vehicle> garage = CreateGarage(1);
+
+            // Act
+            ParkResult first = garage.Park(new Motorcycle("MCA001", "Black", 2, 600));
+            ParkResult second = garage.Park(new Motorcycle("MCB002", "Red", 2, 600));
+            ParkResult third = garage.Park(new Motorcycle("MCC003", "Pink", 2, 600));
+
+            // Assert: 1/3 + 1/3 + 1/3 = exactly 1 space
+            Assert.Equal(ParkResult.Success, first);
+            Assert.Equal(ParkResult.Success, second);
+            Assert.Equal(ParkResult.Success, third);
+            Assert.True(garage.IsFull);
+        }
+
+        [Fact]
+        public void Park_FourthMotorcycleInGarageOfOne_ReturnsGarageFull()
+        {
+            // Arrange
+            Garage<Vehicle> garage = CreateGarage(1);
+            garage.Park(new Motorcycle("MCA001", "Black", 2, 600));
+            garage.Park(new Motorcycle("MCB002", "Red", 2, 600));
+            garage.Park(new Motorcycle("MCC003", "Pink", 2, 600));
+
+            // Act
+            ParkResult result = garage.Park(new Motorcycle("MCD004", "Blue", 2, 600));
+
+            // Assert
+            Assert.Equal(ParkResult.GarageFull, result);
+        }
+
+        [Fact]
+        public void Park_AirplaneInGarageOfTwo_ReturnsNotEnoughSpace()
+        {
+            // Arrange: an airplane needs 3 spaces
+            Garage<Vehicle> garage = CreateGarage(2);
+
+            // Act
+            ParkResult result = garage.Park(new Airplane("PLN123", "White", 3, 2));
+
+            // Assert
+            Assert.Equal(ParkResult.NotEnoughSpace, result);
+            Assert.Equal(0, garage.ParkedCount);
+        }
+
+        [Fact]
+        public void Park_CarWhenOnlyTwoThirdsLeft_ReturnsNotEnoughSpace()
+        {
+            // Arrange: one motorcycle uses 1/3, so 2/3 is left
+            Garage<Vehicle> garage = CreateGarage(1);
+            garage.Park(new Motorcycle("MCA001", "Black", 2, 600));
+
+            // Act
+            ParkResult result = garage.Park(new Car("ABC123", "Red", 4, FuelType.Diesel));
+
+            // Assert: not full (a motorcycle still fits), but a car does not
+            Assert.Equal(ParkResult.NotEnoughSpace, result);
+            Assert.False(garage.IsFull);
+        }
+
+        [Fact]
+        public void FreeSpaces_OneMotorcycleInGarageOfOne_ReturnsTwoThirds()
+        {
+            // Arrange
+            Garage<Vehicle> garage = CreateGarage(1);
+            garage.Park(new Motorcycle("MCA001", "Black", 2, 600));
+
+            // Act
+            double freeSpaces = garage.FreeSpaces;
+
+            // Assert: compare doubles with a precision of 2 decimals
+            Assert.Equal(0.67, freeSpaces, 2);
+        }
+
+        [Theory]
+        [InlineData(1, true)]    // motorcycle fits
+        [InlineData(3, true)]    // car fits exactly
+        [InlineData(6, false)]   // bus or boat does not fit
+        public void HasRoomFor_EmptyGarageOfOne_ReturnsExpected(int spaceInThirds, bool expected)
+        {
+            // Arrange
+            Garage<Vehicle> garage = CreateGarage(1);
+
+            // Act
+            bool hasRoom = garage.HasRoomFor(spaceInThirds);
+
+            // Assert
+            Assert.Equal(expected, hasRoom);
         }
     }
 }
