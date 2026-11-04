@@ -24,9 +24,8 @@ namespace GarageApp
             Console.WriteLine();
 
             // A garage must exist before the menu is shown
-            int capacity = ReadInt("How many parking spaces should the garage have? (1-1000): ", 1, 1000);
-            _handler.CreateGarage(capacity);
-            Console.WriteLine($"A garage with {capacity} parking spaces was created.");
+            Console.WriteLine("First, create your first garage.");
+            CreateNewGarage();
             Console.WriteLine();
 
             // Optional test vehicles
@@ -40,7 +39,7 @@ namespace GarageApp
             while (running)
             {
                 PrintMenu();
-                int choice = ReadInt("Choose an option: ", 0, 6);
+                int choice = ReadInt("Choose an option: ", 0, 8);
                 Console.WriteLine();
 
                 switch (choice)
@@ -62,6 +61,12 @@ namespace GarageApp
                         break;
                     case 6:
                         SearchVehicles();
+                        break;
+                    case 7:
+                        CreateNewGarage();
+                        break;
+                    case 8:
+                        SwitchGarage();
                         break;
                     case 0:
                         running = false;
@@ -85,7 +90,7 @@ namespace GarageApp
 
             Console.WriteLine();
             Console.WriteLine("========================================");
-            Console.WriteLine($" GARAGE  ({_handler.ParkedCount} of {_handler.Capacity} spaces used, {_handler.FreeSpaces} free)");
+            Console.WriteLine($" {_handler.CurrentGarageName.ToUpperInvariant()}  ({_handler.ParkedCount} of {_handler.Capacity} spaces used, {_handler.FreeSpaces} free)");
             Console.WriteLine("========================================");
             Console.WriteLine(" 1. List all parked vehicles");
             Console.WriteLine(" 2. List vehicle types and counts");
@@ -93,6 +98,8 @@ namespace GarageApp
             Console.WriteLine(" 4. Remove a vehicle");
             Console.WriteLine(" 5. Find a vehicle by registration number");
             Console.WriteLine(" 6. Search vehicles by properties");
+            Console.WriteLine(" 7. Create a new garage");
+            Console.WriteLine(" 8. Switch garage");
             Console.WriteLine(" 0. Exit");
             Console.WriteLine("----------------------------------------");
         }
@@ -100,7 +107,7 @@ namespace GarageApp
         // ---------- Menu actions ----------
         private void ListAllVehicles()
         {
-            Console.WriteLine("Parked vehicles in the garage:");
+            Console.WriteLine($"Parked vehicles in {_handler.CurrentGarageName}:");
             PrintVehicles(_handler.GetAllVehicles());
         }
 
@@ -110,11 +117,12 @@ namespace GarageApp
 
             if (typeCounts.Count == 0)
             {
-                Console.WriteLine("The garage is empty.");
+                Console.WriteLine($"{_handler.CurrentGarageName} is empty.");
                 return;
             }
 
-            Console.WriteLine("Vehicle types in the garage:");
+            Console.WriteLine($"Vehicle types in {_handler.CurrentGarageName}:");
+
             foreach (KeyValuePair<string, int> pair in typeCounts)
             {
                 Console.WriteLine($"  {pair.Key,-11} {pair.Value}");
@@ -126,7 +134,7 @@ namespace GarageApp
             // Check early so the user doesn't type everything for nothing
             if (_handler.IsFull)
             {
-                Console.WriteLine("The garage is full. Remove a vehicle first.");
+                Console.WriteLine($"{_handler.CurrentGarageName} is full. Remove a vehicle or switch garage first.");
                 return;
             }
 
@@ -140,10 +148,11 @@ namespace GarageApp
 
             string registrationNumber = ReadRegistrationNumber("Registration number (e.g. ABC123): ");
 
-            // Check early: no need to ask for color and wheels if the number is taken
-            if (_handler.FindByRegistrationNumber(registrationNumber) != null)
+            // Must be unique in ALL garages
+            string? garageWithVehicle = _handler.FindGarageNameFor(registrationNumber);
+            if (garageWithVehicle != null)
             {
-                Console.WriteLine($"A vehicle with registration number {registrationNumber.ToUpperInvariant()} is already parked.");
+                Console.WriteLine($"A vehicle with registration number {registrationNumber.ToUpperInvariant()} is already parked in {garageWithVehicle}.");
                 return;
             }
 
@@ -216,7 +225,12 @@ namespace GarageApp
             }
             else
             {
-                Console.WriteLine($"No vehicle with registration number {registrationNumber.ToUpperInvariant()} was found.");
+                Console.WriteLine($"No vehicle with registration number {registrationNumber.ToUpperInvariant()} was found in {_handler.CurrentGarageName}.");
+
+                // Maybe it is parked somewhere else
+                string? otherGarage = _handler.FindGarageNameFor(registrationNumber);
+                if (otherGarage != null)
+                    Console.WriteLine($"Tip: it is parked in {otherGarage}. Use option 8 to switch garage.");
             }
         }
 
@@ -274,6 +288,55 @@ namespace GarageApp
             PrintVehicles(result);
         }
 
+        // ---------- Several garages ----------
+
+        private void CreateNewGarage()
+        {
+            string name = ReadNewGarageName();
+            int capacity = ReadInt($"How many parking spaces should {name} have? (1-1000): ", 1, 1000);
+
+            _handler.CreateGarage(name, capacity);
+            Console.WriteLine($"{_handler.CurrentGarageName} with {capacity} parking spaces was created. You are now working in it.");
+        }
+
+        private void SwitchGarage()
+        {
+            List<GarageSummary> garages = _handler.GetGarageSummaries();
+
+            if (garages.Count == 1)
+            {
+                Console.WriteLine("You only have one garage. Use option 7 to create another one.");
+                return;
+            }
+
+            Console.WriteLine("Your garages:");
+            for (int i = 0; i < garages.Count; i++)
+            {
+                GarageSummary garage = garages[i];
+                string marker = garage.IsCurrent ? "  <- current" : "";
+                Console.WriteLine($"  {i + 1}. {garage.Name,-18} {garage.ParkedCount} vehicles, {garage.FreeSpaces} of {garage.Capacity} spaces free{marker}");
+            }
+
+            int choice = ReadInt($"Choose garage (1-{garages.Count}): ", 1, garages.Count);
+            _handler.SelectGarage(garages[choice - 1].Name);
+
+            Console.WriteLine($"You are now working in {_handler.CurrentGarageName}.");
+        }
+
+        // Asks again until the name is not used by another garage
+        private string ReadNewGarageName()
+        {
+            while (true)
+            {
+                string name = ReadRequiredString("Name of the garage (e.g. Hangar): ");
+
+                if (!_handler.GarageNameExists(name))
+                    return name;
+
+                Console.WriteLine($"There is already a garage named {name}. Choose another name.");
+            }
+        }
+
         // ---------- Output helpers ----------
         private static void PrintVehicles(List<Vehicle> vehicles)
         {
@@ -289,15 +352,15 @@ namespace GarageApp
             }
         }
 
-        private static void PrintParkResult(ParkResult result, Vehicle vehicle)
+        private void PrintParkResult(ParkResult result, Vehicle vehicle)
         {
             switch (result)
             {
                 case ParkResult.Success:
-                    Console.WriteLine($"{vehicle.RegistrationNumber} was parked in the garage.");
+                    Console.WriteLine($"{vehicle.RegistrationNumber} was parked in {_handler.CurrentGarageName}.");
                     break;
                 case ParkResult.GarageFull:
-                    Console.WriteLine($"Could not park {vehicle.RegistrationNumber}: the garage is full.");
+                    Console.WriteLine($"Could not park {vehicle.RegistrationNumber}: {_handler.CurrentGarageName} is full.");
                     break;
                 case ParkResult.DuplicateRegistrationNumber:
                     Console.WriteLine($"Could not park {vehicle.RegistrationNumber}: a vehicle with that registration number is already parked.");

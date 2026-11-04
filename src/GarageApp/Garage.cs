@@ -12,6 +12,7 @@ namespace GarageApp
         private readonly List<T> _vehicles = new List<T>();
 
         public int Capacity { get; }
+        public string Name { get; }
 
         public int ParkedCount
         {
@@ -28,12 +29,16 @@ namespace GarageApp
             get { return Capacity - ParkedCount; }
         }
 
-        public Garage(int capacity)
+        public Garage(int capacity, string name = "Garage")
         {
             if (capacity < 1)
                 throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
 
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Garage name is required.", nameof(name));
+
             Capacity = capacity;
+            Name = name.Trim();
         }
 
         // Parks a vehicle if there is room and the registration number is not already used.

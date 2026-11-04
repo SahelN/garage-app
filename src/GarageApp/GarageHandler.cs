@@ -3,14 +3,25 @@ using GarageApp.Vehicles;
 
 namespace GarageApp
 {
-    // The layer between the UI and the garage.
+    // The layer between the UI and the garages.
+    // Holds several garages and knows which one the user is working in.
     public class GarageHandler : IHandler
     {
-        private Garage<Vehicle>? _garage;
+        private readonly List<Garage<Vehicle>> _garages = new List<Garage<Vehicle>>();
+
+        // null until the user has created the first garage
+        private Garage<Vehicle>? _currentGarage;
+
+        // ---------- Current garage ----------
 
         public bool HasGarage
         {
-            get { return _garage != null; }
+            get { return _currentGarage != null; }
+        }
+
+        public string CurrentGarageName
+        {
+            get { return RequireGarage().Name; }
         }
 
         public int Capacity
@@ -33,17 +44,69 @@ namespace GarageApp
             get { return RequireGarage().IsFull; }
         }
 
-        public void CreateGarage(int capacity)
+        // ---------- Several garages ----------
+
+        // Garage names are unique, ignoring upper/lower case
+        public bool GarageNameExists(string name)
         {
-            // Garage<T> validates the capacity and throws if it is wrong
-            _garage = new Garage<Vehicle>(capacity);
+            if (string.IsNullOrWhiteSpace(name))
+                return false;
+
+            string trimmedName = name.Trim();
+            return _garages.Any(g => string.Equals(g.Name, trimmedName, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Adds some ready-made vehicles. Returns how many were actually parked
+        // Creates a new garage and makes it the current one
+        public void CreateGarage(string name, int capacity)
+        {
+            if (GarageNameExists(name))
+                throw new ArgumentException($"A garage named {name.Trim()} already exists.", nameof(name));
+
+            Garage<Vehicle> garage = new Garage<Vehicle>(capacity, name);
+            _garages.Add(garage);
+            _currentGarage = garage;
+        }
+
+        // Returns false if there is no garage with that name
+        public bool SelectGarage(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return false;
+
+            string trimmedName = name.Trim();
+            Garage<Vehicle>? garage = _garages.FirstOrDefault(
+                g => string.Equals(g.Name, trimmedName, StringComparison.OrdinalIgnoreCase));
+
+            if (garage == null)
+                return false;
+
+            _currentGarage = garage;
+            return true;
+        }
+
+        // Information about all garages, without giving away the garages themselves
+        public List<GarageSummary> GetGarageSummaries()
+        {
+            return _garages
+                .Select(g => new GarageSummary(g.Name, g.Capacity, g.ParkedCount, g.FreeSpaces, g == _currentGarage))
+                .ToList();
+        }
+
+        // Which garage is the vehicle parked in? null if it is not parked anywhere.
+        public string? FindGarageNameFor(string registrationNumber)
+        {
+            Garage<Vehicle>? garage = _garages.FirstOrDefault(
+                g => g.FindByRegistrationNumber(registrationNumber) != null);
+
+            return garage?.Name;
+        }
+
+        // ---------- Populate ----------
+
+        // Adds some ready-made vehicles to the current garage.
+        // Returns how many were actually parked.
         public int SeedVehicles()
         {
-            Garage<Vehicle> garage = RequireGarage();
-
             List<Vehicle> samples = new List<Vehicle>
             {
                 new Car("ABC123", "Black", 4, FuelType.Gasoline),
@@ -57,15 +120,24 @@ namespace GarageApp
             int parkedCount = 0;
             foreach (Vehicle vehicle in samples)
             {
-                if (garage.Park(vehicle) == ParkResult.Success)
+                if (Park(vehicle) == ParkResult.Success)
                     parkedCount++;
             }
             return parkedCount;
         }
 
+        // ---------- Park, remove, find (current garage) ----------
+
         public ParkResult Park(Vehicle vehicle)
         {
-            return RequireGarage().Park(vehicle);
+            ArgumentNullException.ThrowIfNull(vehicle);
+            Garage<Vehicle> garage = RequireGarage();
+
+            // Registration numbers must be unique in ALL garages, not only the current one
+            if (FindGarageNameFor(vehicle.RegistrationNumber) != null)
+                return ParkResult.DuplicateRegistrationNumber;
+
+            return garage.Park(vehicle);
         }
 
         public bool Remove(string registrationNumber)
@@ -77,6 +149,8 @@ namespace GarageApp
         {
             return RequireGarage().FindByRegistrationNumber(registrationNumber);
         }
+
+        // ---------- Lists and search (current garage, LINQ) ----------
 
         // Returns a copy, so the UI cannot get hold of the garage itself
         public List<Vehicle> GetAllVehicles()
@@ -92,7 +166,7 @@ namespace GarageApp
                 .ToDictionary(group => group.Key, group => group.Count());
         }
 
-        // null means "ignore this property".
+        // null means "ignore this property"
         public List<Vehicle> Search(
             string? vehicleType = null,
             string? color = null,
@@ -157,14 +231,15 @@ namespace GarageApp
             return result.ToList();
         }
 
-        // One place for "there must be a garage". The UI should check HasGarage first,
-        // but the handler protects itself anyway.
+        // ---------- Helpers ----------
+
+        // One place for "there must be a current garage"
         private Garage<Vehicle> RequireGarage()
         {
-            if (_garage == null)
+            if (_currentGarage == null)
                 throw new InvalidOperationException("No garage has been created yet.");
 
-            return _garage;
+            return _currentGarage;
         }
     }
 }
