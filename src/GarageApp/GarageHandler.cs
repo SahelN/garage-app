@@ -1,10 +1,10 @@
-﻿using GarageApp.Vehicles;
-using Microsoft.VisualBasic.FileIO;
+﻿using GarageApp.Interfaces;
+using GarageApp.Vehicles;
 
 namespace GarageApp
 {
     // The layer between the UI and the garage.
-    public class GarageHandler
+    public class GarageHandler : IHandler
     {
         private Garage<Vehicle>? _garage;
 

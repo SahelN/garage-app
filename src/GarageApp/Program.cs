@@ -1,11 +1,13 @@
-﻿namespace GarageApp
+﻿using GarageApp.Interfaces;
+
+namespace GarageApp
 {
     internal class Program
     {
         static void Main()
         {
-            GarageHandler handler = new GarageHandler();
-            ConsoleUI ui = new ConsoleUI(handler);
+            IHandler handler = new GarageHandler();
+            IUI ui = new ConsoleUI(handler);
             ui.Run();
         }
     }

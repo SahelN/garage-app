@@ -1,9 +1,9 @@
-﻿using System;
+﻿using GarageApp.Interfaces;
 using System.Text.RegularExpressions;
 
 namespace GarageApp.Vehicles
 {
-    public abstract class Vehicle
+    public abstract class Vehicle : IVehicle
     {
         public string RegistrationNumber { get; }
         public string Color { get; }

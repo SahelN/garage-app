@@ -1,17 +1,18 @@
-﻿using GarageApp.Vehicles;
+﻿using GarageApp.Interfaces;
+using GarageApp.Vehicles;
 
 namespace GarageApp
 {
-    public class ConsoleUI
+    public class ConsoleUI : IUI
     {
-        private readonly GarageHandler _handler;
+        private readonly IHandler _handler;
 
         private static readonly List<string> VehicleTypes = new List<string>
         {
             "Car", "Motorcycle", "Bus", "Boat", "Airplane"
         };
 
-        public ConsoleUI(GarageHandler handler)
+        public ConsoleUI(IHandler handler)
         {
             ArgumentNullException.ThrowIfNull(handler);
             _handler = handler;
