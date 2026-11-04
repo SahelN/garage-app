@@ -15,6 +15,10 @@ You can park, remove, find and search vehicles. The garage is a **generic collec
 - Find a vehicle by registration number (`ABC123`, `abc123` and `AbC123` all match)
 - Search by any combination of properties, e.g. *all black vehicles with four wheels*
 - Search on vehicle-specific properties (fuel type, seats, cylinder volume, engines, length)
+- Several named garages: create, switch, and always see which one you are working in
+- Registration numbers are unique across all garages
+- Vehicles take different space (motorcycle 1/3, car 1, bus 2, boat 2, airplane 3);
+  only vehicle types that fit are shown when parking
 - Registration number format validated with a regular expression (`ABC123` or `ABC12E`)
 - Clear feedback when something succeeds or fails, and why
 - Robust input handling: the app never crashes on invalid input
@@ -42,15 +46,17 @@ garage-app/
 ├── GarageApp.slnx
 ├── src/GarageApp/
 │   ├── Interfaces/        IHandler, IUI, IVehicle
-│   ├── Vehicles/          Vehicle (abstract), Car, Motorcycle, Bus, Boat, Airplane, FuelType
+│   ├── Vehicles/          Vehicle (abstract), Car, Motorcycle, Bus, Boat, Airplane, FuelType, VehicleSize
 │   ├── Garage.cs          Garage<T>
 │   ├── GarageHandler.cs
+│   ├── GarageSummary.cs
 │   ├── ConsoleUI.cs
 │   ├── ParkResult.cs
 │   └── Program.cs
 └── tests/GarageApp.Tests/
     ├── GarageTests.cs     tests for the public methods of Garage<T>
-    └── VehicleTests.cs    tests for registration number validation
+    ├── VehicleTests.cs    tests for registration number validation and vehicle space
+    └── GarageHandlerTests.cs tests for multiple garages
 ```
 
 ## Getting started
@@ -75,13 +81,13 @@ dotnet run --project src/GarageApp
 dotnet test
 ```
 
-41 unit tests (xUnit), written with Arrange / Act / Assert and named
+63 unit tests (xUnit), written with Arrange / Act / Assert and named
 `MethodName_StateUnderTest_ExpectedBehavior`.
 
 ## Roadmap
 
-- [ ] Multiple garages (e.g. hangar, motorcycle garage) and switching between them
-- [ ] Vehicles of different sizes (car 1 space, boat 2, airplane 3, motorcycle 1/3)
+- [x] Multiple garages (e.g. hangar, motorcycle garage) and switching between them
+- [x] Vehicles of different sizes (car 1 space, boat 2, airplane 3, motorcycle 1/3)
 - [ ] Save and load the garage to a JSON file (async file I/O)
 - [ ] Garage size from configuration (`appsettings.json`)
 - [ ] Garage made of parking spots
