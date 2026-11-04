@@ -90,7 +90,7 @@ namespace GarageApp
 
             Console.WriteLine();
             Console.WriteLine("========================================");
-            Console.WriteLine($" {_handler.CurrentGarageName.ToUpperInvariant()}  ({_handler.ParkedCount} of {_handler.Capacity} spaces used, {_handler.FreeSpaces} free)");
+            Console.WriteLine($" {_handler.CurrentGarageName.ToUpperInvariant()}  ({_handler.ParkedCount} vehicles, {_handler.UsedSpaces:0.##} of {_handler.Capacity} spaces used, {_handler.FreeSpaces:0.##} free)");
             Console.WriteLine("========================================");
             Console.WriteLine(" 1. List all parked vehicles");
             Console.WriteLine(" 2. List vehicle types and counts");
@@ -138,13 +138,24 @@ namespace GarageApp
                 return;
             }
 
-            Console.WriteLine("Vehicle types:");
-            for (int i = 0; i < VehicleTypes.Count; i++)
+            // Only offer the vehicle types that fit in the free space
+            List<string> typesThatFit = VehicleTypes.Where(type => _handler.HasRoomFor(type)).ToList();
+
+            if (typesThatFit.Count == 0)
             {
-                Console.WriteLine($"  {i + 1}. {VehicleTypes[i]}");
+                Console.WriteLine($"Only {_handler.FreeSpaces:0.##} spaces are free in {_handler.CurrentGarageName}. No vehicle type fits.");
+                return;
             }
-            int typeChoice = ReadInt($"Choose vehicle type (1-{VehicleTypes.Count}): ", 1, VehicleTypes.Count);
-            string vehicleType = VehicleTypes[typeChoice - 1];
+
+            Console.WriteLine($"Vehicle types that fit ({_handler.FreeSpaces:0.##} spaces free):");
+            for (int i = 0; i < typesThatFit.Count; i++)
+            {
+                string type = typesThatFit[i];
+                string space = VehicleSize.FormatAsSpaces(VehicleSize.GetSpaceInThirds(type));
+                Console.WriteLine($"  {i + 1}. {type,-11} ({space} space)");
+            }
+            int typeChoice = ReadInt($"Choose vehicle type (1-{typesThatFit.Count}): ", 1, typesThatFit.Count);
+            string vehicleType = typesThatFit[typeChoice - 1];
 
             string registrationNumber = ReadRegistrationNumber("Registration number (e.g. ABC123): ");
 
@@ -314,7 +325,7 @@ namespace GarageApp
             {
                 GarageSummary garage = garages[i];
                 string marker = garage.IsCurrent ? "  <- current" : "";
-                Console.WriteLine($"  {i + 1}. {garage.Name,-18} {garage.ParkedCount} vehicles, {garage.FreeSpaces} of {garage.Capacity} spaces free{marker}");
+                Console.WriteLine($"  {i + 1}. {garage.Name,-18} {garage.ParkedCount} vehicles, {garage.FreeSpaces:0.##} of {garage.Capacity} spaces free{marker}");
             }
 
             int choice = ReadInt($"Choose garage (1-{garages.Count}): ", 1, garages.Count);
@@ -364,6 +375,9 @@ namespace GarageApp
                     break;
                 case ParkResult.DuplicateRegistrationNumber:
                     Console.WriteLine($"Could not park {vehicle.RegistrationNumber}: a vehicle with that registration number is already parked.");
+                    break;
+                case ParkResult.NotEnoughSpace:
+                    Console.WriteLine($"Could not park {vehicle.RegistrationNumber}: it needs {VehicleSize.FormatAsSpaces(vehicle.SpaceInThirds)} space, but only {_handler.FreeSpaces:0.##} are free in {_handler.CurrentGarageName}.");
                     break;
             }
         }

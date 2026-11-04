@@ -68,5 +68,31 @@ namespace GarageApp.Tests
             // Assert
             Assert.Equal("ABC12E", car.RegistrationNumber);
         }
+
+        [Theory]
+        [InlineData(1, "1/3")]
+        [InlineData(3, "1")]
+        [InlineData(4, "1 1/3")]
+        [InlineData(6, "2")]
+        [InlineData(9, "3")]
+        public void FormatAsSpaces_Thirds_ReturnsSpacesAsText(int thirds, string expected)
+        {
+            // Act
+            string text = VehicleSize.FormatAsSpaces(thirds);
+
+            // Assert
+            Assert.Equal(expected, text);
+        }
+
+        [Fact]
+        public void SpaceInThirds_EachVehicleType_HasCorrectSpace()
+        {
+            // Act + Assert
+            Assert.Equal(1, new Motorcycle("MCA001", "Black", 2, 600).SpaceInThirds);
+            Assert.Equal(3, new Car("ABC123", "Black", 4, FuelType.Gasoline).SpaceInThirds);
+            Assert.Equal(6, new Bus("BUS100", "Yellow", 6, 50).SpaceInThirds);
+            Assert.Equal(6, new Boat("BOA001", "White", 8.5).SpaceInThirds);
+            Assert.Equal(9, new Airplane("PLN123", "White", 3, 2).SpaceInThirds);
+        }
     }
 }

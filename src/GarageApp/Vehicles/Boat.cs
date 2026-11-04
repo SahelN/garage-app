@@ -6,6 +6,11 @@ namespace GarageApp.Vehicles
     {
         public double Length { get; }
 
+        public override int SpaceInThirds
+        {
+            get { return VehicleSize.Boat; }
+        }
+
         public Boat(string registrationNumber, string color, double length)
             : base(registrationNumber, color, 0)
         {

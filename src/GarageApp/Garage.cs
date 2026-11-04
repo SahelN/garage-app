@@ -1,7 +1,5 @@
 ﻿using GarageApp.Vehicles;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace GarageApp
 {
@@ -14,19 +12,42 @@ namespace GarageApp
         public int Capacity { get; }
         public string Name { get; }
 
+        // Number of vehicles (not space)
         public int ParkedCount
         {
             get { return _vehicles.Count; }
         }
 
-        public bool IsFull
+        private int CapacityInThirds
         {
-            get { return ParkedCount >= Capacity; }
+            get { return Capacity * VehicleSize.ThirdsPerSpace; }
         }
 
-        public int FreeSpaces
+        private int UsedThirds
         {
-            get { return Capacity - ParkedCount; }
+            get { return _vehicles.Sum(v => v.SpaceInThirds); }
+        }
+
+        public int FreeThirds
+        {
+            get { return CapacityInThirds - UsedThirds; }
+        }
+
+        // For display only, e.g. 2.33 used spaces
+        public double UsedSpaces
+        {
+            get { return (double)UsedThirds / VehicleSize.ThirdsPerSpace; }
+        }
+
+        public double FreeSpaces
+        {
+            get { return (double)FreeThirds / VehicleSize.ThirdsPerSpace; }
+        }
+
+        // Full = no space at all left
+        public bool IsFull
+        {
+            get { return FreeThirds <= 0; }
         }
 
         public Garage(int capacity, string name = "Garage")
@@ -41,6 +62,12 @@ namespace GarageApp
             Name = name.Trim();
         }
 
+        // Is there room for a vehicle that needs this much space?
+        public bool HasRoomFor(int spaceInThirds)
+        {
+            return spaceInThirds <= FreeThirds;
+        }
+
         // Parks a vehicle if there is room and the registration number is not already used.
         public ParkResult Park(T vehicle)
         {
@@ -48,6 +75,10 @@ namespace GarageApp
 
             if (IsFull)
                 return ParkResult.GarageFull;
+
+            // There is space left, but not enough for this vehicle
+            if (!HasRoomFor(vehicle.SpaceInThirds))
+                return ParkResult.NotEnoughSpace;
 
             // Vehicle already stores the registration number in upper case,
             // so we can compare directly with ==
